@@ -7,10 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
+import { ScheduleEditor } from "@/components/ScheduleEditor";
 
 const Schedule = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const [schedules, setSchedules] = useState<any[]>([]);
   const [selectedYear, setSelectedYear] = useState("1");
 
@@ -22,20 +25,20 @@ const Schedule = () => {
   }, [user, loading, navigate]);
 
   // Fetch schedules
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      const { data, error } = await supabase
-        .from('schedules')
-        .select('*')
-        .eq('year', parseInt(selectedYear))
-        .order('day_of_week')
-        .order('start_time');
-      
-      if (!error && data) {
-        setSchedules(data);
-      }
-    };
+  const fetchSchedules = async () => {
+    const { data, error } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('year', parseInt(selectedYear))
+      .order('day_of_week')
+      .order('start_time');
+    
+    if (!error && data) {
+      setSchedules(data);
+    }
+  };
 
+  useEffect(() => {
     if (user) {
       fetchSchedules();
     }
@@ -47,12 +50,21 @@ const Schedule = () => {
   ];
 
   const daysOfWeek = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 8h to 19h
 
   const formatTime = (time: string) => {
     return time.substring(0, 5); // Format HH:MM from HH:MM:SS
   };
 
-  if (loading) {
+  const getScheduleForDayAndTime = (day: string, hour: number) => {
+    return schedules.filter((s) => {
+      const startHour = parseInt(s.start_time.split(':')[0]);
+      const endHour = parseInt(s.end_time.split(':')[0]);
+      return s.day_of_week === day && startHour <= hour && hour < endHour;
+    })[0];
+  };
+
+  if (loading || roleLoading) {
     return null;
   }
 
@@ -61,13 +73,18 @@ const Schedule = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-accent via-primary to-secondary bg-clip-text text-transparent">
-            Emploi du Temps
-          </h1>
-          <p className="text-muted-foreground">
-            Consultez les horaires de cours pour chaque année
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-accent via-primary to-secondary bg-clip-text text-transparent">
+              Emploi du Temps
+            </h1>
+            <p className="text-muted-foreground">
+              Consultez les horaires de cours pour chaque année
+            </p>
+          </div>
+          {isAdmin && (
+            <ScheduleEditor year={parseInt(selectedYear)} onSuccess={fetchSchedules} />
+          )}
         </div>
 
         <Tabs value={selectedYear} onValueChange={setSelectedYear} className="w-full">
@@ -85,49 +102,69 @@ const Schedule = () => {
 
           {years.map((year) => (
             <TabsContent key={year.id} value={year.id}>
-              <div className="grid gap-4">
-                {daysOfWeek.map((day) => (
-                  <Card key={day} className="border-l-4 border-l-accent">
-                    <CardHeader>
-                      <CardTitle className="text-xl">{day}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {schedules.filter((item) => item.day_of_week === day).length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          Aucun cours ce jour
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          {schedules
-                            .filter((item) => item.day_of_week === day)
-                            .map((item, idx) => (
-                              <div 
-                                key={idx}
-                                className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg bg-gradient-to-r from-muted/50 to-transparent hover:from-muted transition-all"
-                              >
-                                <div className="space-y-1 flex-1">
-                                  <h3 className="font-semibold text-foreground">{item.subject}</h3>
-                                  <p className="text-sm text-muted-foreground">{item.professor}</p>
-                                </div>
-                                
-                                <div className="flex gap-4 mt-2 md:mt-0">
-                                  <Badge variant="outline" className="gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {formatTime(item.start_time)} - {formatTime(item.end_time)}
-                                  </Badge>
-                                  <Badge variant="secondary" className="gap-1">
-                                    <MapPin className="h-3 w-3" />
-                                    {item.room}
-                                  </Badge>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <Card className="overflow-x-auto">
+                <CardContent className="p-0">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="border border-border p-3 text-left font-semibold sticky left-0 bg-muted/50 z-10">
+                          Heure
+                        </th>
+                        {daysOfWeek.map((day) => (
+                          <th key={day} className="border border-border p-3 text-left font-semibold min-w-[180px]">
+                            {day}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hours.map((hour) => (
+                        <tr key={hour} className="hover:bg-muted/20 transition-colors">
+                          <td className="border border-border p-3 font-medium sticky left-0 bg-background z-10">
+                            {hour}h - {hour + 1}h
+                          </td>
+                          {daysOfWeek.map((day) => {
+                            const schedule = getScheduleForDayAndTime(day, hour);
+                            return (
+                              <td key={day} className="border border-border p-2">
+                                {schedule ? (
+                                  <div className="bg-gradient-to-br from-primary/10 to-secondary/10 p-3 rounded-lg border-l-4 border-l-accent relative group">
+                                    <div className="space-y-1">
+                                      <h4 className="font-semibold text-sm text-foreground">
+                                        {schedule.subject}
+                                      </h4>
+                                      <p className="text-xs text-muted-foreground">
+                                        {schedule.professor}
+                                      </p>
+                                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <MapPin className="h-3 w-3" />
+                                        {schedule.room}
+                                      </div>
+                                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
+                                      </div>
+                                    </div>
+                                    {isAdmin && (
+                                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ScheduleEditor
+                                          year={parseInt(selectedYear)}
+                                          schedule={schedule}
+                                          onSuccess={fetchSchedules}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : null}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
             </TabsContent>
           ))}
         </Tabs>

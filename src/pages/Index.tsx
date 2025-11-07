@@ -2,8 +2,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, Upload, Calendar, ArrowRight } from "lucide-react";
 import ifriBuildingImage from "@/assets/ifri-building.jpg";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border bg-background/95 backdrop-blur">
@@ -15,9 +18,17 @@ const Index = () => {
                 IFRI Collection
               </span>
             </div>
-            <Link to="/auth">
-              <Button variant="outline">Se connecter</Button>
-            </Link>
+            {!loading && (
+              user ? (
+                <Link to="/library">
+                  <Button variant="default">Aller à la bibliothèque</Button>
+                </Link>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="outline">Se connecter</Button>
+                </Link>
+              )
+            )}
           </div>
         </div>
       </nav>

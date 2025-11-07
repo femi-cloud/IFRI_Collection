@@ -8,12 +8,15 @@ import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { DocumentPreview } from "@/components/DocumentPreview";
 
 const Library = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [selectedSemester, setSelectedSemester] = useState("1");
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [allDocuments, setAllDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
 
   // Redirect if not logged in
@@ -23,18 +26,17 @@ const Library = () => {
     }
   }, [user, loading, navigate]);
 
-  // Fetch documents
+  // Fetch ALL documents once
   useEffect(() => {
     const fetchDocuments = async () => {
       setLoadingDocs(true);
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('semester', parseInt(selectedSemester))
         .order('created_at', { ascending: false });
       
       if (!error && data) {
-        setDocuments(data);
+        setAllDocuments(data);
       }
       setLoadingDocs(false);
     };
@@ -42,15 +44,33 @@ const Library = () => {
     if (user) {
       fetchDocuments();
     }
-  }, [selectedSemester, user]);
+  }, [user]);
+
+  // Filter documents for the selected semester and category
+  const documents = allDocuments.filter(d => {
+    const matchesSemester = d.semester === parseInt(selectedSemester);
+    const matchesCategory = !selectedCategory || d.document_type === selectedCategory;
+    return matchesSemester && matchesCategory;
+  });
+
+  // Count documents by semester and category
+  const getDocumentsByCategory = (semester: number) => {
+    const semesterDocs = allDocuments.filter(d => d.semester === semester);
+    return {
+      cours: semesterDocs.filter(d => d.document_type === 'cours').length,
+      td: semesterDocs.filter(d => d.document_type === 'td').length,
+      recueil: semesterDocs.filter(d => d.document_type === 'recueil').length,
+      total: semesterDocs.length
+    };
+  };
 
   const semesters = [
-    { id: "1", name: "Semestre 1", documents: documents.filter(d => d.semester === 1).length },
-    { id: "2", name: "Semestre 2", documents: documents.filter(d => d.semester === 2).length },
-    { id: "3", name: "Semestre 3", documents: documents.filter(d => d.semester === 3).length },
-    { id: "4", name: "Semestre 4", documents: documents.filter(d => d.semester === 4).length },
-    { id: "5", name: "Semestre 5", documents: documents.filter(d => d.semester === 5).length },
-    { id: "6", name: "Semestre 6", documents: documents.filter(d => d.semester === 6).length },
+    { id: "1", name: "Semestre 1", stats: getDocumentsByCategory(1) },
+    { id: "2", name: "Semestre 2", stats: getDocumentsByCategory(2) },
+    { id: "3", name: "Semestre 3", stats: getDocumentsByCategory(3) },
+    { id: "4", name: "Semestre 4", stats: getDocumentsByCategory(4) },
+    { id: "5", name: "Semestre 5", stats: getDocumentsByCategory(5) },
+    { id: "6", name: "Semestre 6", stats: getDocumentsByCategory(6) },
   ];
 
   if (loading) {
@@ -75,18 +95,49 @@ const Library = () => {
         <Tabs value={selectedSemester} onValueChange={setSelectedSemester} className="w-full">
           <TabsList className="grid grid-cols-6 w-full mb-8">
             {semesters.map((sem) => (
-              <TabsTrigger 
-                key={sem.id} 
-                value={sem.id}
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="font-semibold">S{sem.id}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {sem.documents}
-                  </Badge>
-                </div>
-              </TabsTrigger>
+              <HoverCard key={sem.id} openDelay={200}>
+                <HoverCardTrigger asChild>
+                  <TabsTrigger 
+                    value={sem.id}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="font-semibold">S{sem.id}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {sem.stats.total}
+                      </Badge>
+                    </div>
+                  </TabsTrigger>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-64 bg-background border-border z-50">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-foreground">Catégories de documents</h4>
+                    <div className="space-y-1 text-sm">
+                      <button
+                        onClick={() => setSelectedCategory(selectedCategory === 'cours' ? null : 'cours')}
+                        className="w-full flex justify-between text-muted-foreground hover:text-foreground hover:bg-accent/50 p-2 rounded-md transition-colors cursor-pointer"
+                      >
+                        <span>Cours</span>
+                        <Badge variant={selectedCategory === 'cours' ? "default" : "outline"} className="text-xs">{sem.stats.cours}</Badge>
+                      </button>
+                      <button
+                        onClick={() => setSelectedCategory(selectedCategory === 'td' ? null : 'td')}
+                        className="w-full flex justify-between text-muted-foreground hover:text-foreground hover:bg-accent/50 p-2 rounded-md transition-colors cursor-pointer"
+                      >
+                        <span>TD</span>
+                        <Badge variant={selectedCategory === 'td' ? "default" : "outline"} className="text-xs">{sem.stats.td}</Badge>
+                      </button>
+                      <button
+                        onClick={() => setSelectedCategory(selectedCategory === 'recueil' ? null : 'recueil')}
+                        className="w-full flex justify-between text-muted-foreground hover:text-foreground hover:bg-accent/50 p-2 rounded-md transition-colors cursor-pointer"
+                      >
+                        <span>Recueil d'épreuves</span>
+                        <Badge variant={selectedCategory === 'recueil' ? "default" : "outline"} className="text-xs">{sem.stats.recueil}</Badge>
+                      </button>
+                    </div>
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
             ))}
           </TabsList>
 
@@ -122,7 +173,8 @@ const Library = () => {
                         <p className="text-sm text-muted-foreground mt-2">{doc.description}</p>
                       )}
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-2">
+                      <DocumentPreview fileUrl={doc.file_url} fileName={doc.file_name} />
                       <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
                         <Button className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90">
                           <Download className="h-4 w-4" />
