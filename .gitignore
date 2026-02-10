@@ -1,0 +1,84 @@
+# FRONTEND 
+
+# Dependencies
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# Logs
+frontend/logs/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*
+
+# Environment variables
+frontend/*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# Vite cache
+frontend/.vite/
+
+# BACKEND (Django + Python)
+
+# Virtual Environment
+backend/venv/
+backend/env/
+backend/ENV/
+backend/.venv/
+
+# Python cache
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/*.so
+backend/.Python
+
+# Django
+backend/*.log
+backend/db.sqlite3
+backend/db.sqlite3-journal
+backend/media/
+backend/documents/
+backend/staticfiles/
+backend/static/
+
+# Environment variables
+backend/.env
+backend/.env.local
+backend/.env.production
+
+# IDE / EDITORS
+
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj*
+*.sln
+*.sw?
+*.swp
+*.swo
+
+# OS
+
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# GENERAL
+
+*.bak
+*.tmp
+*~
+.pytest_cache/
+.coverage
+htmlcov/
