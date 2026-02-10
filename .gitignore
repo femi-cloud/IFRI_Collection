@@ -54,6 +54,7 @@ backend/.env.local
 backend/.env.production
 
 node_modules/
+**/node_modules/
 
 # IDE / EDITORS
 
