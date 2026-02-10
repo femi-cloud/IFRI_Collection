@@ -53,6 +53,8 @@ backend/.env
 backend/.env.local
 backend/.env.production
 
+node_modules\.vite\deps_temp_7740efe0\package.json
+
 # IDE / EDITORS
 
 .vscode/*
