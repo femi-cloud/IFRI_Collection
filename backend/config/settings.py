@@ -127,6 +127,7 @@ CLOUDINARY_STORAGE = {
     'API_KEY': config('CLOUDINARY_API_KEY'),
     'API_SECRET': config('CLOUDINARY_API_SECRET'),
     'SECURE': True,
+    'RESOURCE_TYPE': 'raw', 
 }
 
 # FORCER Cloudinary en production, même si DEBUG=True
