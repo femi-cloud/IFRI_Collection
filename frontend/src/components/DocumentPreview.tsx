@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import { useState } from "react";
 
 interface DocumentPreviewProps {
   fileUrl: string;
@@ -9,13 +8,16 @@ interface DocumentPreviewProps {
 }
 
 export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => {
-  const [error, setError] = useState<string | null>(null);
   const isPDF = fileName.toLowerCase().endsWith('.pdf');
   
-  console.log("🔍 DocumentPreview DEBUG:");
-  console.log("📁 fileName:", fileName);
-  console.log("🔗 fileUrl (original):", fileUrl);
-  console.log("📄 isPDF:", isPDF);
+  // Pour les PDFs sur Cloudinary, forcer l'affichage de la première page en JPG
+  let displayUrl = fileUrl;
+  if (isPDF && fileUrl.includes('cloudinary.com')) {
+    // Ajouter .jpg à la fin pour convertir automatiquement
+    displayUrl = `${fileUrl}.jpg`;
+  }
+  
+  console.log("🔍 DocumentPreview:", { fileName, fileUrl, displayUrl, isPDF });
 
   return (
     <Dialog>
@@ -28,48 +30,27 @@ export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => 
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogTitle className="sr-only">{fileName}</DialogTitle>
         <div className="w-full h-[80vh]">
-          {error && (
-            <div className="text-red-500 p-4">
-              <h3 className="font-bold">Erreur de chargement:</h3>
-              <p>{error}</p>
-              <p className="mt-2 text-sm">URL: {fileUrl}</p>
-            </div>
-          )}
-          
-          <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
-            <p><strong>Debug Info:</strong></p>
+          <div className="mb-2 p-2 bg-blue-100 rounded text-xs">
+            <p><strong>Debug:</strong></p>
             <p>File: {fileName}</p>
-            <p>URL: {fileUrl}</p>
-            <p>Type: {isPDF ? 'PDF' : 'Image'}</p>
+            <p>URL: {displayUrl}</p>
           </div>
 
           {isPDF ? (
-            <iframe
-              src={fileUrl}
-              className="w-full h-full rounded-lg border-2 border-blue-500"
-              title={fileName}
-              onLoad={() => {
-                console.log("✅ PDF chargé avec succès");
-                setError(null);
-              }}
+            // Afficher comme une image (première page du PDF)
+            <img
+              src={displayUrl}
+              alt={fileName}
+              className="w-full h-full object-contain rounded-lg"
               onError={(e) => {
-                console.error("❌ Erreur chargement PDF:", fileUrl);
-                setError(`Impossible de charger le PDF: ${fileUrl}`);
+                console.error("❌ Erreur chargement:", displayUrl);
               }}
             />
           ) : (
             <img
-              src={fileUrl}
+              src={displayUrl}
               alt={fileName}
               className="w-full h-full object-contain rounded-lg"
-              onLoad={() => {
-                console.log("✅ Image chargée avec succès");
-                setError(null);
-              }}
-              onError={(e) => {
-                console.error("❌ Erreur chargement image:", fileUrl);
-                setError(`Impossible de charger l'image: ${fileUrl}`);
-              }}
             />
           )}
         </div>
