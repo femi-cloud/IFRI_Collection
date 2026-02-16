@@ -131,7 +131,7 @@ CLOUDINARY_STORAGE = {
 # Media files
 # En production : stockage sur Cloudinary
 # En développement : stockage local dans documents/
-if config('CLOUDINARY_CLOUD_NAME', default=None):
+if not DEBUG:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
