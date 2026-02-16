@@ -23,7 +23,7 @@ def create_admin(request):
     User = get_user_model()
     email = 'admin@ifri.edu'
     username = 'admin'
-    password = 'supersecurepassword123'
+    password = 'password123'
     
     if not User.objects.filter(email=email).exists():
         user = User.objects.create_superuser(
