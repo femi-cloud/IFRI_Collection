@@ -129,26 +129,25 @@ CLOUDINARY_STORAGE = {
     'SECURE': True,
 }
 
-# Détecter si on est en production
-IS_PRODUCTION = bool(config('DATABASE_URL', default=None))
+# Détecter la production de manière fiable
+IS_PRODUCTION = not DEBUG and 'DATABASE_URL' in os.environ
 
 # Debug logs
 print("=" * 60)
 print(f"Environment: {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'}")
 print(f"DEBUG: {DEBUG}")
-print(f"DATABASE_URL: {'EXISTS' if IS_PRODUCTION else 'NOT SET'}")
+print(f"DATABASE_URL exists: {'DATABASE_URL' in os.environ}")
 
 if IS_PRODUCTION:
-    # Production - Cloudinary
+    # Production - Cloudinary FORCÉ
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     MEDIA_URL = ''
-    print(f"CLOUDINARY ENABLED")
-    print(f"Cloud Name: {CLOUDINARY_STORAGE['CLOUD_NAME']}")
+    print("✅ CLOUDINARY ENABLED")
 else:
     # Development - Local
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
-    print("LOCAL STORAGE ENABLED")
+    print("📁 LOCAL STORAGE ENABLED")
 
 print("=" * 60)
 
