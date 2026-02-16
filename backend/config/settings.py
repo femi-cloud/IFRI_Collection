@@ -127,6 +127,8 @@ CLOUDINARY_STORAGE = {
     'API_KEY': config('CLOUDINARY_API_KEY'),
     'API_SECRET': config('CLOUDINARY_API_SECRET'),
     'SECURE': True,
+    'TYPE': 'upload',
+    'SIGN_URL': True,
     
 }
 
