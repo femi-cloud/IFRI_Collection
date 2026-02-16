@@ -13,6 +13,32 @@ from .permissions import IsAdmin, IsOwnerOrReadOnly
 from django.contrib.auth import get_user_model
 
 # Authentication Views
+
+from django.contrib.auth import get_user_model
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
+def create_admin(request):
+    User = get_user_model()
+    email = 'admin@ifri.edu'
+    username = 'admin'
+    password = 'supersecurepassword123'
+    
+    if not User.objects.filter(email=email).exists():
+        user = User.objects.create_superuser(
+            email=email,
+            username=username,
+            password=password
+        )
+        return Response({
+            'message': 'Superuser created successfully!',
+            'email': email,
+            'username': username,
+            'password': password  # À supprimer après utilisation
+        })
+    return Response({'message': 'Superuser already exists!'})
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
