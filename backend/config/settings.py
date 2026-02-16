@@ -179,45 +179,30 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = config(
+base_origins = config(
     'CORS_ALLOWED_ORIGINS',
     cast=Csv(),
     default='http://localhost:8080,http://127.0.0.1:8080'
 )
 
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
+CORS_ALLOWED_ORIGINS = list(base_origins)
 
-CORS_ALLOW_CREDENTIALS = True
-
-# 🔑 EXTENSION POUR LA PRODUCTION (après définition)
+# Ajouter les domaines de production SANS espaces
 if not DEBUG:
-    # Ajouter les domaines de production SANS espaces superflus
     production_origins = [
         'https://res.cloudinary.com',
         'https://ifri-collection.vercel.app',
         'https://ifri-collection-backend.onrender.com'
     ]
     CORS_ALLOWED_ORIGINS = list(set(CORS_ALLOWED_ORIGINS + production_origins))
-    
-    # Ajouter les headers Cloudinary
-    cloudinary_headers = [
-        'x-cloudinary-*',
-        'cloudinary-*',
-        'X-Requested-With',
-        'X-Cloudinary-*',
-        'Cloudinary-*'
-    ]
-    CORS_ALLOW_HEADERS = list(set(CORS_ALLOW_HEADERS + cloudinary_headers))
+
+CORS_ALLOW_HEADERS = [
+    'accept', 'accept-encoding', 'authorization', 'content-type',
+    'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
+    'x-cloudinary-*', 'cloudinary-*'  # Headers Cloudinary
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Security Settings (Production only)
 if not DEBUG:
