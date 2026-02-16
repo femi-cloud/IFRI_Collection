@@ -123,7 +123,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_ROOT = BASE_DIR / 'documents'
 
-if not DEBUG:
+if config('DATABASE_URL', default=None):
     # Configuration Cloudinary
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
