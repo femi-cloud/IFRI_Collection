@@ -1,56 +1,58 @@
+from django.core.files.storage import Storage
 from cloudinary_storage.storage import MediaCloudinaryStorage, RawMediaCloudinaryStorage
 
-class SmartCloudinaryStorage:
+
+class SmartCloudinaryStorage(Storage):
     """
     Stockage intelligent qui choisit automatiquement :
     - RawMediaCloudinaryStorage pour les fichiers (PDF, DOC, etc.)
     - MediaCloudinaryStorage pour les images (PNG, JPG, etc.)
     """
     
-    def __call__(self):
-        # Cette méthode sera appelée pour chaque fichier uploadé
-        return self
+    def __init__(self):
+        self.raw_storage = RawMediaCloudinaryStorage()
+        self.media_storage = MediaCloudinaryStorage()
     
-    def save(self, name, content, max_length=None):
-        # Détecter le type de fichier par son extension
-        extension = name.lower().split('.')[-1]
-        
-        # Liste des extensions d'images
+    def _get_storage(self, name):
+        """Retourne le bon storage selon l'extension du fichier"""
+        extension = name.lower().split('.')[-1] if '.' in name else ''
         image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
         
-        # Choisir le bon storage
         if extension in image_extensions:
-            storage = MediaCloudinaryStorage()
-            print(f"📸 Image détectée ({extension}) - Utilisation de MediaCloudinaryStorage")
+            print(f"📸 Image détectée ({extension}) - MediaCloudinaryStorage")
+            return self.media_storage
         else:
-            storage = RawMediaCloudinaryStorage()
-            print(f"📄 Document détecté ({extension}) - Utilisation de RawMediaCloudinaryStorage")
-        
-        return storage.save(name, content, max_length)
+            print(f"📄 Document détecté ({extension}) - RawMediaCloudinaryStorage")
+            return self.raw_storage
+    
+    def _save(self, name, content):
+        storage = self._get_storage(name)
+        return storage._save(name, content)
+    
+    def _open(self, name, mode='rb'):
+        storage = self._get_storage(name)
+        return storage._open(name, mode)
     
     def url(self, name):
-        # Pour récupérer l'URL, on doit deviner le type
-        extension = name.lower().split('.')[-1]
-        image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
-        
-        if extension in image_extensions:
-            return MediaCloudinaryStorage().url(name)
-        else:
-            return RawMediaCloudinaryStorage().url(name)
+        storage = self._get_storage(name)
+        return storage.url(name)
     
     def exists(self, name):
-        # Vérifier si le fichier existe
-        try:
-            return RawMediaCloudinaryStorage().exists(name)
-        except:
-            return MediaCloudinaryStorage().exists(name)
+        storage = self._get_storage(name)
+        return storage.exists(name)
     
     def delete(self, name):
-        # Supprimer le fichier
-        extension = name.lower().split('.')[-1]
-        image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
-        
-        if extension in image_extensions:
-            return MediaCloudinaryStorage().delete(name)
-        else:
-            return RawMediaCloudinaryStorage().delete(name)
+        storage = self._get_storage(name)
+        return storage.delete(name)
+    
+    def size(self, name):
+        storage = self._get_storage(name)
+        return storage.size(name)
+    
+    def get_valid_name(self, name):
+        storage = self._get_storage(name)
+        return storage.get_valid_name(name)
+    
+    def get_available_name(self, name, max_length=None):
+        storage = self._get_storage(name)
+        return storage.get_available_name(name, max_length)
