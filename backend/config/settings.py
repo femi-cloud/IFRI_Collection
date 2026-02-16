@@ -130,24 +130,25 @@ CLOUDINARY_STORAGE = {
 }
 
 # FORCER Cloudinary en production, même si DEBUG=True
-IS_RENDER = 'RENDER' in os.environ or 'DATABASE_URL' in os.environ
+# FORCER Cloudinary en production
+IS_PRODUCTION = config('DATABASE_URL', default=None) is not None
 
 print("=" * 60)
-print(f"Environment: {'RENDER' if IS_RENDER else 'DEVELOPMENT'}")
-print(f"DEBUG: {DEBUG}")
-print(f"IS_RENDER: {IS_RENDER}")
+print(f"🌍 Environment: {'PRODUCTION (Render)' if IS_PRODUCTION else 'DEVELOPMENT (Local)'}")
+print(f"🔍 DEBUG: {DEBUG}")
+print(f"🔗 DATABASE_URL exists: {IS_PRODUCTION}")
 
-if IS_RENDER:
-    # Production - Cloudinary FORCÉ
+if IS_PRODUCTION:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     MEDIA_URL = ''
-    print("✅ CLOUDINARY ENABLED (FORCED)")
+    print("✅ CLOUDINARY ENABLED")
+    print(f"☁️  Cloud: {CLOUDINARY_STORAGE.get('CLOUD_NAME', 'NOT SET')}")
 else:
-    # Development - Local
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
-    print("📁 LOCAL STORAGE ENABLED")
+    print("📁 LOCAL STORAGE")
 
+print(f"📦 DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE}")
 print("=" * 60)
 
 MEDIA_ROOT = BASE_DIR / 'documents'
