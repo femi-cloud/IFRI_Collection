@@ -10,7 +10,9 @@ class SmartCloudinaryStorage(Storage):
     """
     
     def __init__(self):
-        self.raw_storage = RawMediaCloudinaryStorage()
+        self.raw_storage = RawMediaCloudinaryStorage(
+            options={'resource_type': 'raw', 'type': 'upload'}
+        )
         self.media_storage = MediaCloudinaryStorage()
     
     def _get_storage(self, name):
