@@ -121,23 +121,38 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_ROOT = BASE_DIR / 'documents'
+# Cloudinary credentials
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+    'SECURE': True,
+}
 
-if config('DATABASE_URL', default=None):
-    # Configuration Cloudinary
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
-        'API_KEY': config('CLOUDINARY_API_KEY'),
-        'API_SECRET': config('CLOUDINARY_API_SECRET'),
-        'SECURE': True,  # Toujours utiliser HTTPS
-    }
-    
-    # Configuration pour générer les bonnes URLs
+# Détecter si on est en production
+IS_PRODUCTION = bool(config('DATABASE_URL', default=None))
+
+# Debug logs
+print("=" * 60)
+print(f"Environment: {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'}")
+print(f"DEBUG: {DEBUG}")
+print(f"DATABASE_URL: {'EXISTS' if IS_PRODUCTION else 'NOT SET'}")
+
+if IS_PRODUCTION:
+    # Production - Cloudinary
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = ''  # Laissez vide pour utiliser les URLs Cloudinary
+    MEDIA_URL = ''
+    print(f"CLOUDINARY ENABLED")
+    print(f"Cloud Name: {CLOUDINARY_STORAGE['CLOUD_NAME']}")
 else:
+    # Development - Local
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
+    print("LOCAL STORAGE ENABLED")
+
+print("=" * 60)
+
+MEDIA_ROOT = BASE_DIR / 'documents'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

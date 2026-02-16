@@ -78,9 +78,26 @@ class DocumentSerializer(serializers.ModelSerializer):
             return obj.uploaded_by.email
     
     def get_file_url(self, obj):
-        request = self.context.get('request')
-        if obj.file and hasattr(obj.file, 'url'):
-            return request.build_absolute_uri(obj.file.url)
+        if obj.file:
+            url = obj.file.url
+            
+            # 🔍 DEBUG
+            print("=" * 60)
+            print(f"📄 Document: {obj.title}")
+            print(f"🔗 File URL: {url}")
+            print(f"📦 Storage: {obj.file.storage.__class__.__name__}")
+            print("=" * 60)
+            
+            # Si l'URL est déjà absolue (Cloudinary), la retourner telle quelle
+            if url.startswith('http://') or url.startswith('https://'):
+                return url
+            
+            # Sinon, construire l'URL absolue (pour les URLs relatives /media/)
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(url)
+            
+            return url
         return None
 
 # Schedule Serializer
