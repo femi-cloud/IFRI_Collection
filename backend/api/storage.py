@@ -1,58 +1,46 @@
 from django.core.files.storage import Storage
-from cloudinary_storage.storage import MediaCloudinaryStorage, RawMediaCloudinaryStorage
+from cloudinary_storage.storage import MediaCloudinaryStorage
 
 
 class SmartCloudinaryStorage(Storage):
     """
-    Stockage intelligent qui choisit automatiquement :
-    - RawMediaCloudinaryStorage pour les fichiers (PDF, DOC, etc.)
-    - MediaCloudinaryStorage pour les images (PNG, JPG, etc.)
+    Utilise MediaCloudinaryStorage pour TOUS les fichiers (images ET PDFs).
+    Cloudinary peut gérer les PDFs via /image/ et les convertir automatiquement.
     """
     
     def __init__(self):
-        self.raw_storage = RawMediaCloudinaryStorage()
-        self.media_storage = MediaCloudinaryStorage()
-    
-    def _get_storage(self, name):
-        """Retourne le bon storage selon l'extension du fichier"""
-        extension = name.lower().split('.')[-1] if '.' in name else ''
-        image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
-        
-        if extension in image_extensions:
-            print(f"📸 Image détectée ({extension}) - MediaCloudinaryStorage")
-            return self.media_storage
-        else:
-            print(f"📄 Document détecté ({extension}) - RawMediaCloudinaryStorage")
-            return self.raw_storage
+        self.storage = MediaCloudinaryStorage()
     
     def _save(self, name, content):
-        storage = self._get_storage(name)
-        return storage._save(name, content)
+        return self.storage._save(name, content)
     
     def _open(self, name, mode='rb'):
-        storage = self._get_storage(name)
-        return storage._open(name, mode)
+        return self.storage._open(name, mode)
     
     def url(self, name):
-        storage = self._get_storage(name)
-        return storage.url(name)
+        # Pour les PDFs, on ajoute .jpg à la fin de l'URL pour forcer la conversion
+        url = self.storage.url(name)
+        
+        # Si c'est un PDF, on peut le convertir en image pour l'aperçu
+        if name.lower().endswith('.pdf'):
+            # Cloudinary peut convertir la première page du PDF en image
+            # Remplacer .pdf par .jpg dans l'URL
+            url = url.replace('.pdf', '.jpg')
+            print(f"📄 PDF converti en image pour aperçu: {url}")
+        
+        return url
     
     def exists(self, name):
-        storage = self._get_storage(name)
-        return storage.exists(name)
+        return self.storage.exists(name)
     
     def delete(self, name):
-        storage = self._get_storage(name)
-        return storage.delete(name)
+        return self.storage.delete(name)
     
     def size(self, name):
-        storage = self._get_storage(name)
-        return storage.size(name)
+        return self.storage.size(name)
     
     def get_valid_name(self, name):
-        storage = self._get_storage(name)
-        return storage.get_valid_name(name)
+        return self.storage.get_valid_name(name)
     
     def get_available_name(self, name, max_length=None):
-        storage = self._get_storage(name)
-        return storage.get_available_name(name, max_length)
+        return self.storage.get_available_name(name, max_length)
