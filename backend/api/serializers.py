@@ -81,21 +81,25 @@ class DocumentSerializer(serializers.ModelSerializer):
         if obj.file:
             url = obj.file.url
             
-            # 🔍 DEBUG
+            # 🔍 DEBUG DÉTAILLÉ
             print("=" * 60)
             print(f"📄 Document: {obj.title}")
-            print(f"🔗 File URL: {url}")
+            print(f"📁 File name: {obj.file.name}")
+            print(f"🔗 File URL (brut): {url}")
             print(f"📦 Storage: {obj.file.storage.__class__.__name__}")
+            print(f"🌐 URL starts with http: {url.startswith('http')}")
             print("=" * 60)
             
             # Si l'URL est déjà absolue (Cloudinary), la retourner telle quelle
             if url.startswith('http://') or url.startswith('https://'):
                 return url
             
-            # Sinon, construire l'URL absolue (pour les URLs relatives /media/)
+            # Sinon, construire l'URL absolue
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(url)
+                full_url = request.build_absolute_uri(url)
+                print(f"🔗 URL finale (construite): {full_url}")
+                return full_url
             
             return url
         return None

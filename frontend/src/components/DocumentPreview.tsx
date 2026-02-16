@@ -1,6 +1,7 @@
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import { useState } from "react";
 
 interface DocumentPreviewProps {
   fileUrl: string;
@@ -8,24 +9,13 @@ interface DocumentPreviewProps {
 }
 
 export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => {
+  const [error, setError] = useState<string | null>(null);
   const isPDF = fileName.toLowerCase().endsWith('.pdf');
   
-  // Construire l'URL complète
-  let fullUrl = fileUrl;
-  
-  // Si l'URL est relative (/media/...), construire l'URL complète
-  if (fileUrl.startsWith('/media/') || fileUrl.startsWith('media/')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-    const baseUrl = apiUrl.replace('/api', ''); // Enlever /api pour avoir juste le domaine
-    fullUrl = `${baseUrl}${fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl}`;
-  }
-  
-  // Forcer HTTPS pour les URLs Cloudinary
-  if (fullUrl.includes('cloudinary.com')) {
-    fullUrl = fullUrl.replace('http://', 'https://');
-  }
-
-  console.log('🔍 DocumentPreview:', { original: fileUrl, full: fullUrl });
+  console.log("🔍 DocumentPreview DEBUG:");
+  console.log("📁 fileName:", fileName);
+  console.log("🔗 fileUrl (original):", fileUrl);
+  console.log("📄 isPDF:", isPDF);
 
   return (
     <Dialog>
@@ -36,23 +26,49 @@ export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => 
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogTitle className="sr-only">{fileName}</DialogTitle>
         <div className="w-full h-[80vh]">
+          {error && (
+            <div className="text-red-500 p-4">
+              <h3 className="font-bold">Erreur de chargement:</h3>
+              <p>{error}</p>
+              <p className="mt-2 text-sm">URL: {fileUrl}</p>
+            </div>
+          )}
+          
+          <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
+            <p><strong>Debug Info:</strong></p>
+            <p>File: {fileName}</p>
+            <p>URL: {fileUrl}</p>
+            <p>Type: {isPDF ? 'PDF' : 'Image'}</p>
+          </div>
+
           {isPDF ? (
             <iframe
-              src={fullUrl}
-              className="w-full h-full rounded-lg"
+              src={fileUrl}
+              className="w-full h-full rounded-lg border-2 border-blue-500"
               title={fileName}
+              onLoad={() => {
+                console.log("✅ PDF chargé avec succès");
+                setError(null);
+              }}
               onError={(e) => {
-                console.error('❌ Erreur chargement PDF:', fullUrl);
+                console.error("❌ Erreur chargement PDF:", fileUrl);
+                setError(`Impossible de charger le PDF: ${fileUrl}`);
               }}
             />
           ) : (
             <img
-              src={fullUrl}
+              src={fileUrl}
               alt={fileName}
               className="w-full h-full object-contain rounded-lg"
+              onLoad={() => {
+                console.log("✅ Image chargée avec succès");
+                setError(null);
+              }}
               onError={(e) => {
-                console.error('❌ Erreur chargement image:', fullUrl);
+                console.error("❌ Erreur chargement image:", fileUrl);
+                setError(`Impossible de charger l'image: ${fileUrl}`);
               }}
             />
           )}
