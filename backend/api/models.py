@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from cloudinary_storage.storage import MediaCloudinaryStorage  
 import uuid
 
 # Custom User Model
@@ -49,7 +50,8 @@ class Document(models.Model):
     description = models.TextField(blank=True, null=True)
     semester = models.IntegerField(choices=SEMESTER_CHOICES)
     document_type = models.CharField(max_length=10, choices=DOCUMENT_TYPES)
-    file = models.FileField(upload_to='%Y/%m/')
+    file = models.FileField(upload_to='%Y/%m/',
+                            storage=MediaCloudinaryStorage())
     file_name = models.CharField(max_length=255)
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents')
     created_at = models.DateTimeField(auto_now_add=True)
