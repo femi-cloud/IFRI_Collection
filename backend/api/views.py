@@ -151,6 +151,19 @@ class DocumentViewSet(viewsets.ModelViewSet):
         print("  Fichiers:", request.FILES)
         
         return super().create(request, *args, **kwargs)
+    
+    # Dans DocumentViewSet, ajoutez ceci dans la méthode create :
+    def create(self, request, *args, **kwargs):
+        print("🔍 Upload reçu:")
+        print(f"Données: {request.data}")
+        print(f"Fichiers: {request.FILES}")
+        
+        response = super().create(request, *args, **kwargs)
+        
+        print(f"✅ Document créé:")
+        print(f"File URL: {response.data.get('file')}")
+        
+        return response
 
 # Schedule ViewSet
 class ScheduleViewSet(viewsets.ModelViewSet):

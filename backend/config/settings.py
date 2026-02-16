@@ -121,23 +121,23 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Cloudinary configuration
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
-    'API_KEY': config('CLOUDINARY_API_KEY', default=''),
-    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
-}
+MEDIA_ROOT = BASE_DIR / 'documents'
 
-# Media files
-# En production : stockage sur Cloudinary
-# En développement : stockage local dans documents/
 if not DEBUG:
+    # Configuration Cloudinary
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
+        'API_KEY': config('CLOUDINARY_API_KEY', default=''),
+        'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
+        'SECURE': True,  # Toujours utiliser HTTPS
+    }
+    
+    # Configuration pour générer les bonnes URLs
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = ''  # Laissez vide pour utiliser les URLs Cloudinary
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'documents'
+    MEDIA_URL = '/media/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -184,6 +184,26 @@ CORS_ALLOW_HEADERS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+# 🔑 EXTENSION POUR LA PRODUCTION (après définition)
+if not DEBUG:
+    # Ajouter les domaines de production SANS espaces superflus
+    production_origins = [
+        'https://res.cloudinary.com',
+        'https://ifri-collection.vercel.app',
+        'https://ifri-collection-backend.onrender.com'
+    ]
+    CORS_ALLOWED_ORIGINS = list(set(CORS_ALLOWED_ORIGINS + production_origins))
+    
+    # Ajouter les headers Cloudinary
+    cloudinary_headers = [
+        'x-cloudinary-*',
+        'cloudinary-*',
+        'X-Requested-With',
+        'X-Cloudinary-*',
+        'Cloudinary-*'
+    ]
+    CORS_ALLOW_HEADERS = list(set(CORS_ALLOW_HEADERS + cloudinary_headers))
+
 # Security Settings (Production only)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -191,7 +211,7 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'DENY'
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True

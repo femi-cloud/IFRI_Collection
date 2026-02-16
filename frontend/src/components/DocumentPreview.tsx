@@ -9,6 +9,7 @@ interface DocumentPreviewProps {
 
 export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => {
   const isPDF = fileName.toLowerCase().endsWith('.pdf');
+  const cleanUrl = fileUrl.replace('http://', 'https://').trim();
 
   return (
     <Dialog>
@@ -22,7 +23,7 @@ export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => 
         <div className="w-full h-[80vh]">
           {isPDF ? (
             <iframe
-              src={fileUrl}
+              src={cleanUrl}
               className="w-full h-full rounded-lg"
               title={fileName}
             />
