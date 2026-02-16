@@ -10,8 +10,22 @@ from .serializers import (
     DocumentSerializer, ScheduleSerializer, UserRoleSerializer
 )
 from .permissions import IsAdmin, IsOwnerOrReadOnly
+from django.contrib.auth import get_user_model
 
 # Authentication Views
+
+@api_view(['GET'])
+def create_admin(request):
+    User = get_user_model()
+    if not User.objects.filter(email='admin@ifri.edu').exists():
+        User.objects.create_superuser(
+            email='admin@ifri.edu',
+            username='admin',
+            password='mine'
+        )
+        return Response({'message': 'Superuser created!'})
+    return Response({'message': 'Superuser already exists!'})
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
