@@ -21,7 +21,7 @@ def create_admin(request):
         User.objects.create_superuser(
             email='admin@ifri.edu',
             username='admin',
-            password='mine'
+            password='password123'
         )
         return Response({'message': 'Superuser created!'})
     return Response({'message': 'Superuser already exists!'})
