@@ -38,8 +38,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'cloudinary_storage',
-    'cloudinary',
     
     # Local apps
     'api',
@@ -132,26 +130,23 @@ CLOUDINARY_STORAGE = {
     
 }
 
-# FORCER Cloudinary en production, même si DEBUG=True
-# FORCER Cloudinary en production
-IS_PRODUCTION = config('DATABASE_URL', default=None) is not None
+# Détection de l'environnement
+IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
+
+if IS_RAILWAY:
+    # Sur Railway, utiliser le volume persistant
+    MEDIA_ROOT = '/data/media'  # Railway volume
+else:
+    # En local
+    MEDIA_ROOT = BASE_DIR / 'documents'
+
+MEDIA_URL = '/media/'
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 print("=" * 60)
-print(f"🌍 Environment: {'PRODUCTION (Render)' if IS_PRODUCTION else 'DEVELOPMENT (Local)'}")
-print(f"🔍 DEBUG: {DEBUG}")
-print(f"🔗 DATABASE_URL exists: {IS_PRODUCTION}")
-
-if IS_PRODUCTION:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = ''
-    print("✅ CLOUDINARY ENABLED")
-    print(f"☁️  Cloud: {CLOUDINARY_STORAGE.get('CLOUD_NAME', 'NOT SET')}")
-else:
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    MEDIA_URL = '/media/'
-    print("📁 LOCAL STORAGE")
-
-print(f"📦 DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE}")
+print(f"🌍 Environment: {'RAILWAY' if IS_RAILWAY else 'LOCAL'}")
+print(f"📁 MEDIA_ROOT: {MEDIA_ROOT}")
+print(f"🔗 MEDIA_URL: {MEDIA_URL}")
 print("=" * 60)
 
 MEDIA_ROOT = BASE_DIR / 'documents'
