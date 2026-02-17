@@ -111,13 +111,24 @@ IS_PRODUCTION = config('DATABASE_URL', default=None) is not None
 
 if IS_PRODUCTION:
     # Supabase Storage
-    SUPABASE_URL = config('SUPABASE_URL')  
-    SUPABASE_KEY = config('SUPABASE_KEY')
+    SUPABASE_URL = config('SUPABASE_URL', default='')
+    SUPABASE_KEY = config('SUPABASE_KEY', default='')
     SUPABASE_BUCKET = config('SUPABASE_BUCKET', default='documents')
     
-    # Configuration pour le storage personnalisé
-    DEFAULT_FILE_STORAGE = 'api.storage.SupabaseStorage'
-    MEDIA_URL = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/'
+    print("🔍 DEBUG Supabase:")
+    print(f"  SUPABASE_URL: {SUPABASE_URL[:30]}..." if SUPABASE_URL else "  SUPABASE_URL: VIDE ❌")
+    print(f"  SUPABASE_KEY: {SUPABASE_KEY[:20]}..." if SUPABASE_KEY else "  SUPABASE_KEY: VIDE ❌")
+    print(f"  SUPABASE_BUCKET: {SUPABASE_BUCKET}")
+    
+    if SUPABASE_URL and SUPABASE_KEY:
+        DEFAULT_FILE_STORAGE = 'api.storage.SupabaseStorage'
+        MEDIA_URL = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/'
+        print("  ✅ SupabaseStorage activé")
+    else:
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+        MEDIA_URL = '/media/'
+        MEDIA_ROOT = BASE_DIR / 'documents'
+        print("  ⚠️ Variables Supabase manquantes, fallback FileSystemStorage")
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
