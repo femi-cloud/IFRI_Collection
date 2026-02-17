@@ -12,7 +12,9 @@ from .serializers import (
 from .permissions import IsAdmin, IsOwnerOrReadOnly
 from django.contrib.auth import get_user_model
 import requests as http_requests
-from django.http import HttpResponse
+from django.http import HttpResponse 
+import cloudinary
+import cloudinary.api
 
 # Authentication Views
 
@@ -201,26 +203,40 @@ class UserRoleViewSet(viewsets.ModelViewSet):
     queryset = UserRole.objects.all()
     serializer_class = UserRoleSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
-    
-    
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def download_document(request, doc_id):
     try:
         doc = Document.objects.get(id=doc_id)
         
-        # Récupérer le fichier depuis Cloudinary
-        response = http_requests.get(doc.file.url, stream=True)
+        # Utiliser l'API Cloudinary pour obtenir le fichier
+        result = cloudinary.api.resource(
+            doc.file.name,
+            resource_type='image',
+            type='upload'
+        )
+        
+        print(f"📥 Cloudinary resource: {result}")
+        
+        # Télécharger via l'URL sécurisée
+        secure_url = result.get('secure_url', doc.file.url)
+        response = http_requests.get(secure_url)
         
         if response.status_code == 200:
             http_response = HttpResponse(
                 response.content,
-                content_type=response.headers.get('content-type', 'application/octet-stream')
+                content_type='application/pdf'
             )
             http_response['Content-Disposition'] = f'attachment; filename="{doc.file_name}"'
             return http_response
-        else:
-            return Response({'error': 'Fichier non accessible'}, status=400)
+        
+        return Response({'error': 'Fichier non accessible'}, status=400)
             
     except Document.DoesNotExist:
         return Response({'error': 'Document non trouvé'}, status=404)
+    except Exception as e:
+        print(f"❌ Exception: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=500)
