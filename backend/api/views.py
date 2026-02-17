@@ -210,35 +210,21 @@ def download_document(request, doc_id):
     try:
         doc = Document.objects.get(id=doc_id)
         
-        # Générer une URL signée avec attachment
+        # Générer une URL signée temporaire (valide 1h)
         url = cloudinary.utils.cloudinary_url(
             doc.file.name,
             resource_type='image',
             type='upload',
             sign_url=True,
             secure=True,
-            flags='attachment'
+            flags='attachment',
+            attachment=doc.file_name  # Force le nom du fichier au téléchargement
         )[0]
         
-        print(f"🔐 URL signée: {url}")
-        
-        # Télécharger le fichier
-        response = http_requests.get(url, timeout=30)
-        print(f"📡 Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            http_response = HttpResponse(
-                response.content,
-                content_type='application/pdf'
-            )
-            http_response['Content-Disposition'] = f'attachment; filename="{doc.file_name}"'
-            return http_response
-        
-        return Response({
-            'error': f'Cloudinary error {response.status_code}',
-            'url': url
-        }, status=400)
+        # Retourner l'URL au lieu de télécharger
+        return Response({'download_url': url})
             
+    except Document.DoesNotExist:
+        return Response({'error': 'Document non trouvé'}, status=404)
     except Exception as e:
-        print(f"❌ Exception: {str(e)}")
         return Response({'error': str(e)}, status=500)

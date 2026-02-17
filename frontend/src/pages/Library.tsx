@@ -86,15 +86,19 @@ const Library = () => {
 
   const handleDownload = async (doc: Document) => {
   try {
-    const response = await downloadDocument(doc.id);
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = doc.file_name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const token = localStorage.getItem('access_token');
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/documents/${doc.id}/download/`,
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      // Ouvrir l'URL signée dans un nouvel onglet
+      window.open(data.download_url, '_blank');
+    }
   } catch (error) {
     console.error('❌ Erreur téléchargement:', error);
   }
