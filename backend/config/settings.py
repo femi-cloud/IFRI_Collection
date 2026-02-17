@@ -7,7 +7,6 @@ import os
 from dotenv import load_dotenv
 from decouple import config, Csv
 import dj_database_url
-from datetime import timedelta
 
 # Charger les variables d'environnement depuis .env
 load_dotenv()
@@ -46,12 +45,11 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise pour les fichiers statiques
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'api.middleware.DisableCSRFMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -77,11 +75,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# ========================================
-# DATABASE
-# ========================================
+# Database
+# En production (Render) : utilise PostgreSQL via DATABASE_URL
+# En développement (local) : utilise MySQL
 if config('DATABASE_URL', default=None):
-    # Production (Railway/Render PostgreSQL)
+    # Production (Render PostgreSQL)
     DATABASES = {
         'default': dj_database_url.config(
             default=config('DATABASE_URL'),
@@ -116,21 +114,30 @@ TIME_ZONE = 'Africa/Porto-Novo'
 USE_I18N = True
 USE_TZ = True
 
-# ========================================
-# STATIC FILES
-# ========================================
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ========================================
-# MEDIA FILES
-# ========================================
-IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ or 'RAILWAY_PROJECT_ID' in os.environ
+# Cloudinary credentials
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+    'SECURE': True,
+    'TYPE': 'upload',
+    'SIGN_URL': True,
+    
+}
+
+# Détection de l'environnement
+IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
 
 if IS_RAILWAY:
-    MEDIA_ROOT = '/data/media'
+    # Sur Railway, utiliser le volume persistant
+    MEDIA_ROOT = '/data/media'  # Railway volume
 else:
+    # En local
     MEDIA_ROOT = BASE_DIR / 'documents'
 
 MEDIA_URL = '/media/'
@@ -142,14 +149,12 @@ print(f"📁 MEDIA_ROOT: {MEDIA_ROOT}")
 print(f"🔗 MEDIA_URL: {MEDIA_URL}")
 print("=" * 60)
 
-# ========================================
-# DEFAULT PRIMARY KEY
-# ========================================
+MEDIA_ROOT = BASE_DIR / 'documents'
+
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ========================================
-# DJANGO REST FRAMEWORK
-# ========================================
+# Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -161,9 +166,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-# ========================================
-# JWT SETTINGS
-# ========================================
+# JWT Settings
+from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -171,42 +175,35 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
 }
 
-# ========================================
-# CORS SETTINGS
-# ========================================
-CORS_ALLOWED_ORIGINS = config(
+# CORS Settings
+base_origins = config(
     'CORS_ALLOWED_ORIGINS',
     cast=Csv(),
     default='http://localhost:8080,http://127.0.0.1:8080'
 )
 
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
+CORS_ALLOWED_ORIGINS = list(base_origins)
+
+# Ajouter les domaines de production SANS espaces
+if not DEBUG:
+    production_origins = [
+        'https://res.cloudinary.com',
+        'https://ifri-collection.vercel.app',
+        'https://ifri-collection-backend.onrender.com'
+    ]
+    CORS_ALLOWED_ORIGINS = list(set(CORS_ALLOWED_ORIGINS + production_origins))
 
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    'accept', 'accept-encoding', 'authorization', 'content-type',
+    'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
+    'x-cloudinary-*', 'cloudinary-*'  # Headers Cloudinary
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# SECURITY SETTINGS (Production only)
-
+# Security Settings (Production only)
 if not DEBUG:
-    SECURE_SSL_REDIRECT = False
+    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True

@@ -18,40 +18,10 @@ from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
 @api_view(['POST'])
-def register_test(request):
-    try:
-        data = request.data
-        email = data.get('email')
-        username = data.get('username')
-        password = data.get('password')
-        
-        if not email or not username or not password:
-            return Response({"error": "Email, username and password required"}, status=400)
-        
-        if User.objects.filter(email=email).exists():
-            return Response({"error": "Email already exists"}, status=400)
-        
-        user = User.objects.create_user(
-            email=email,
-            username=username,
-            password=password
-        )
-        return Response({"message": "User created", "id": user.id}, status=201)
-    except Exception as e:
-        return Response({"error": str(e)}, status=400)
-
-"""@api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-    #Inscription d'un nouvel utilisateur
+    """Inscription d'un nouvel utilisateur"""
     
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
@@ -67,7 +37,7 @@ def register(request):
             'message': 'Utilisateur créé avec succès'
         }, status=status.HTTP_201_CREATED)
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)"""
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
