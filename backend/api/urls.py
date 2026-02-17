@@ -13,6 +13,9 @@ router.register(r'user-roles', views.UserRoleViewSet, basename='userrole')
 urlpatterns = [
     # Authentication
     path('auth/register/', views.register, name='register'),
+    
+    path('auth/register/', views.register_test, name='register'),
+    
     path('auth/login/', views.login, name='login'),
     path('auth/logout/', views.logout, name='logout'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
