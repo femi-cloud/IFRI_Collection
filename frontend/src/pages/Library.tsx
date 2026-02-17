@@ -202,26 +202,16 @@ const Library = () => {
                           <p className="text-sm text-muted-foreground mt-2">{doc.description}</p>
                         )}
                       </CardHeader>
-                      <CardContent className="space-y-2">
-                        <DocumentPreview fileUrl={doc.file_url} fileName={doc.file_name} />
-                        <a 
-                          href={`${import.meta.env.VITE_API_URL}/documents/${doc.id}/download/`}
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          download={doc.file_name}
-                        >
-                          <Button
-                          onClick={() => {
-                            // Ouvrir directement l'URL Cloudinary dans un nouvel onglet
-                            window.open(doc.file_url, '_blank');
-                          }}
-                          className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                        >
-                          <Download className="h-4 w-4" />
-                          Télécharger
-                        </Button>
-                        </a>
-                      </CardContent>
+                        <CardContent className="space-y-2">
+                          <DocumentPreview fileUrl={doc.file_url} fileName={doc.file_name} />
+                          <Button 
+                            onClick={() => handleDownload(doc)}
+                            className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                          >
+                            <Download className="h-4 w-4" />
+                            Télécharger
+                          </Button>
+                        </CardContent>
                     </Card>
                   ))}
                 </div>
