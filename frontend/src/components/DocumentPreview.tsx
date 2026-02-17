@@ -9,10 +9,10 @@ interface DocumentPreviewProps {
 
 export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => {
   const isPDF = fileName.toLowerCase().endsWith('.pdf');
-  
-  // Pour les PDFs Cloudinary : afficher la première page en image
-  const displayUrl = isPDF && fileUrl.includes('cloudinary.com') 
-    ? `${fileUrl}.jpg` 
+
+  // Convertir l'URL raw/upload en image/upload + .jpg pour les PDFs
+  const displayUrl = isPDF && fileUrl.includes('cloudinary.com')
+    ? fileUrl.replace('/raw/upload/', '/image/upload/') + '.jpg'
     : fileUrl;
 
   return (
