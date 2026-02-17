@@ -210,13 +210,16 @@ const Library = () => {
                           rel="noopener noreferrer"
                           download={doc.file_name}
                         >
-                          <Button 
-                            onClick={() => handleDownload(doc)}
-                            className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                          >
-                            <Download className="h-4 w-4" />
-                            Télécharger
-                          </Button>
+                          <Button
+                          onClick={() => {
+                            // Ouvrir directement l'URL Cloudinary dans un nouvel onglet
+                            window.open(doc.file_url, '_blank');
+                          }}
+                          className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                        >
+                          <Download className="h-4 w-4" />
+                          Télécharger
+                        </Button>
                         </a>
                       </CardContent>
                     </Card>
