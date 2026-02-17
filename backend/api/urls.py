@@ -12,7 +12,7 @@ router.register(r'user-roles', views.UserRoleViewSet, basename='userrole')
 
 urlpatterns = [
     # Authentication
-    path('auth/register/', views.register, name='register'),
+    #path('auth/register/', views.register, name='register'),
     
     path('auth/register/', views.register_test, name='register'),
     
