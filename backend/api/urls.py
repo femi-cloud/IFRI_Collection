@@ -17,7 +17,6 @@ urlpatterns = [
     path('auth/logout/', views.logout, name='logout'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/me/', views.current_user, name='current_user'),
-    path('documents/<uuid:doc_id>/download/', views.download_document, name='download_document'),
     
     # ViewSets routes
     path('', include(router.urls)),

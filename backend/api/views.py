@@ -11,10 +11,6 @@ from .serializers import (
 )
 from .permissions import IsAdmin, IsOwnerOrReadOnly
 from django.contrib.auth import get_user_model
-import requests as http_requests
-from django.http import HttpResponse 
-import cloudinary
-import cloudinary.api
 
 # Authentication Views
 
@@ -204,27 +200,3 @@ class UserRoleViewSet(viewsets.ModelViewSet):
     serializer_class = UserRoleSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def download_document(request, doc_id):
-    try:
-        doc = Document.objects.get(id=doc_id)
-        
-        # Générer une URL signée temporaire (valide 1h)
-        url = cloudinary.utils.cloudinary_url(
-            doc.file.name,
-            resource_type='image',
-            type='upload',
-            sign_url=True,
-            secure=True,
-            flags='attachment',
-            attachment=doc.file_name  # Force le nom du fichier au téléchargement
-        )[0]
-        
-        # Retourner l'URL au lieu de télécharger
-        return Response({'download_url': url})
-            
-    except Document.DoesNotExist:
-        return Response({'error': 'Document non trouvé'}, status=404)
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)

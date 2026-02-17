@@ -31,8 +31,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'cloudinary_storage',
-    'cloudinary',
     'api',
 ]
 
@@ -108,22 +106,18 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# CLOUDINARY + MEDIA
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': config('CLOUDINARY_API_KEY'),
-    'API_SECRET': config('CLOUDINARY_API_SECRET'),
-    'SECURE': True,
-    'TYPE': 'upload',
-    'SIGN_URL': True,
-}
-
+# SUPABASE STORAGE CONFIGURATION
 IS_PRODUCTION = config('DATABASE_URL', default=None) is not None
 
 if IS_PRODUCTION:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
-    MEDIA_URL = ''
-    MEDIA_ROOT = ''
+    # Supabase Storage
+    SUPABASE_URL = config('SUPABASE_URL')  
+    SUPABASE_KEY = config('SUPABASE_KEY')
+    SUPABASE_BUCKET = config('SUPABASE_BUCKET', default='documents')
+    
+    # Configuration pour le storage personnalisé
+    DEFAULT_FILE_STORAGE = 'api.storage.SupabaseStorage'
+    MEDIA_URL = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/'
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
