@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from decouple import config, Csv
 import dj_database_url
+from datetime import timedelta
 
 # Charger les variables d'environnement depuis .env
 load_dotenv()
@@ -45,7 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise pour les fichiers statiques
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -75,11 +76,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database
-# En production (Render) : utilise PostgreSQL via DATABASE_URL
-# En développement (local) : utilise MySQL
+# ========================================
+# DATABASE
+# ========================================
 if config('DATABASE_URL', default=None):
-    # Production (Render PostgreSQL)
+    # Production (Railway/Render PostgreSQL)
     DATABASES = {
         'default': dj_database_url.config(
             default=config('DATABASE_URL'),
@@ -114,19 +115,21 @@ TIME_ZONE = 'Africa/Porto-Novo'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# ========================================
+# STATIC FILES
+# ========================================
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Détection de l'environnement
-IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
+# ========================================
+# MEDIA FILES
+# ========================================
+IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ or 'RAILWAY_PROJECT_ID' in os.environ
 
 if IS_RAILWAY:
-    # Sur Railway, utiliser le volume persistant
-    MEDIA_ROOT = '/data/media'  # Railway volume
+    MEDIA_ROOT = '/data/media'
 else:
-    # En local
     MEDIA_ROOT = BASE_DIR / 'documents'
 
 MEDIA_URL = '/media/'
@@ -138,12 +141,14 @@ print(f"📁 MEDIA_ROOT: {MEDIA_ROOT}")
 print(f"🔗 MEDIA_URL: {MEDIA_URL}")
 print("=" * 60)
 
-MEDIA_ROOT = BASE_DIR / 'documents'
-
-# Default primary key field type
+# ========================================
+# DEFAULT PRIMARY KEY
+# ========================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Django REST Framework
+# ========================================
+# DJANGO REST FRAMEWORK
+# ========================================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -155,8 +160,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-# JWT Settings
-from datetime import timedelta
+# ========================================
+# JWT SETTINGS
+# ========================================
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -164,33 +170,32 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
 }
 
-# CORS Settings
-base_origins = config(
+# ========================================
+# CORS SETTINGS
+# ========================================
+CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
     cast=Csv(),
     default='http://localhost:8080,http://127.0.0.1:8080'
 )
 
-CORS_ALLOWED_ORIGINS = list(base_origins)
-
-# Ajouter les domaines de production SANS espaces
-if not DEBUG:
-    production_origins = [
-        'https://res.cloudinary.com',
-        'https://ifri-collection.vercel.app',
-        'https://ifri-collection-backend.onrender.com'
-    ]
-    CORS_ALLOWED_ORIGINS = list(set(CORS_ALLOWED_ORIGINS + production_origins))
-
 CORS_ALLOW_HEADERS = [
-    'accept', 'accept-encoding', 'authorization', 'content-type',
-    'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
-    'x-cloudinary-*', 'cloudinary-*'  # Headers Cloudinary
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Security Settings (Production only)
+# ========================================
+# SECURITY SETTINGS (Production only)
+# ========================================
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
