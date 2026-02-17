@@ -187,7 +187,23 @@ const Library = () => {
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <DocumentPreview fileUrl={doc.file_url} fileName={doc.file_name} />
-                        <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                        <a 
+                        href={(() => {
+                          if (!doc.file_url.includes('cloudinary.com')) return doc.file_url;
+                          
+                          const fileName = doc.file_name.toLowerCase();
+                          if (fileName.endsWith('.pdf')) return `${doc.file_url}.pdf`;
+                          if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) return `${doc.file_url}.docx`;
+                          if (fileName.endsWith('.png')) return `${doc.file_url}.png`;
+                          if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return `${doc.file_url}.jpg`;
+                          
+                          // Par défaut, retourner l'URL telle quelle
+                          return doc.file_url;
+                        })()}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        download={doc.file_name}
+                      >
                           <Button className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90">
                             <Download className="h-4 w-4" />
                             Télécharger
