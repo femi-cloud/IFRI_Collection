@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 
@@ -9,6 +9,11 @@ interface DocumentPreviewProps {
 
 export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => {
   const isPDF = fileName.toLowerCase().endsWith('.pdf');
+  
+  // Pour les PDFs Cloudinary : afficher la première page en image
+  const displayUrl = isPDF && fileUrl.includes('cloudinary.com') 
+    ? `${fileUrl}.jpg` 
+    : fileUrl;
 
   return (
     <Dialog>
@@ -19,12 +24,13 @@ export const DocumentPreview = ({ fileUrl, fileName }: DocumentPreviewProps) => 
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogTitle className="sr-only">{fileName}</DialogTitle>
         <div className="w-full h-[80vh]">
           {isPDF ? (
-            <iframe
-              src={fileUrl}
-              className="w-full h-full rounded-lg"
-              title={fileName}
+            <img
+              src={displayUrl}
+              alt={fileName}
+              className="w-full h-full object-contain rounded-lg"
             />
           ) : (
             <img

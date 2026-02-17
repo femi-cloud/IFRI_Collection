@@ -1,5 +1,5 @@
 """
-Django settings for config project.
+Django settings for config project
 """
 
 from pathlib import Path
@@ -7,25 +7,20 @@ import os
 from dotenv import load_dotenv
 from decouple import config, Csv
 import dj_database_url
+from datetime import timedelta
 
-# Charger les variables d'environnement depuis .env
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# SECURITY
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-)o3sd00nffxzg5x+(p$w4c57kk=ev6_xr0ug7ijzps#pd@u70t')
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
-
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='localhost,127.0.0.1')
 
-# Custom User Model
+# APPLICATIONS
 AUTH_USER_MODEL = 'api.User'
 
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,19 +28,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    # Third party apps
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    
-    # Local apps
+    'cloudinary_storage',
+    'cloudinary',
     'api',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise pour les fichiers statiques
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -75,11 +68,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database
-# En production (Render) : utilise PostgreSQL via DATABASE_URL
-# En développement (local) : utilise MySQL
+# DATABASE
 if config('DATABASE_URL', default=None):
-    # Production (Render PostgreSQL)
     DATABASES = {
         'default': dj_database_url.config(
             default=config('DATABASE_URL'),
@@ -88,7 +78,6 @@ if config('DATABASE_URL', default=None):
         )
     }
 else:
-    # Development (MySQL local)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -100,7 +89,7 @@ else:
         }
     }
 
-# Password validation
+# PASSWORD VALIDATION
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -108,18 +97,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
+# INTERNATIONALIZATION
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Africa/Porto-Novo'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# STATIC FILES
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Cloudinary credentials
+# CLOUDINARY + MEDIA
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': config('CLOUDINARY_API_KEY'),
@@ -127,34 +116,28 @@ CLOUDINARY_STORAGE = {
     'SECURE': True,
     'TYPE': 'upload',
     'SIGN_URL': True,
-    
 }
 
-# Détection de l'environnement
-IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
+IS_PRODUCTION = config('DATABASE_URL', default=None) is not None
 
-if IS_RAILWAY:
-    # Sur Railway, utiliser le volume persistant
-    MEDIA_ROOT = '/data/media'  # Railway volume
+if IS_PRODUCTION:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
+    MEDIA_URL = ''
+    MEDIA_ROOT = ''
 else:
-    # En local
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'documents'
 
-MEDIA_URL = '/media/'
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
 print("=" * 60)
-print(f"🌍 Environment: {'RAILWAY' if IS_RAILWAY else 'LOCAL'}")
-print(f"📁 MEDIA_ROOT: {MEDIA_ROOT}")
-print(f"🔗 MEDIA_URL: {MEDIA_URL}")
+print(f"🌍 IS_PRODUCTION: {IS_PRODUCTION}")
+print(f"📦 STORAGE: {DEFAULT_FILE_STORAGE}")
 print("=" * 60)
 
-MEDIA_ROOT = BASE_DIR / 'documents'
-
-# Default primary key field type
+# DEFAULT PRIMARY KEY
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Django REST Framework
+# DJANGO REST FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -166,8 +149,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-# JWT Settings
-from datetime import timedelta
+# JWT SETTINGS
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -175,42 +157,26 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
 }
 
-# CORS Settings
-base_origins = config(
-    'CORS_ALLOWED_ORIGINS',
-    cast=Csv(),
-    default='http://localhost:8080,http://127.0.0.1:8080'
-)
+# CORS SETTINGS
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = list(base_origins)
-
-# Ajouter les domaines de production SANS espaces
-if not DEBUG:
-    production_origins = [
-        'https://res.cloudinary.com',
-        'https://ifri-collection.vercel.app',
-        'https://ifri-collection-backend.onrender.com'
-    ]
-    CORS_ALLOWED_ORIGINS = list(set(CORS_ALLOWED_ORIGINS + production_origins))
+CORS_ALLOW_METHODS = [
+    'DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT',
+]
 
 CORS_ALLOW_HEADERS = [
     'accept', 'accept-encoding', 'authorization', 'content-type',
     'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
-    'x-cloudinary-*', 'cloudinary-*'  # Headers Cloudinary
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-
-# Security Settings (Production only)
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+# SECURITY (Production)
+if IS_PRODUCTION:
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'SAMEORIGIN'
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
 else:
     X_FRAME_OPTIONS = 'SAMEORIGIN'
