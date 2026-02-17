@@ -178,3 +178,8 @@ export const updateSchedule = (id: string, data: Partial<Schedule>) =>
   api.patch<Schedule>(`/schedules/${id}/`, data);
 
 export const deleteSchedule = (id: string) => api.delete(`/schedules/${id}/`);
+
+export const downloadDocument = (id: string) =>
+  api.get(`/documents/${id}/download/`, {
+    responseType: 'blob',  // ← Important pour les fichiers binaires
+  });

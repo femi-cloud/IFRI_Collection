@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { DocumentPreview } from "@/components/DocumentPreview";
-import { getDocuments, Document } from "@/lib/api";
+import { getDocuments, Document, downloadDocument } from "@/lib/api";
 
 const Library = () => {
   const navigate = useNavigate();
@@ -82,6 +82,23 @@ const Library = () => {
   if (loading) {
     return null;
   }
+
+
+  const handleDownload = async (doc: Document) => {
+  try {
+    const response = await downloadDocument(doc.id);
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = doc.file_name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('❌ Erreur téléchargement:', error);
+  }
+};
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,7 +210,10 @@ const Library = () => {
                           rel="noopener noreferrer"
                           download={doc.file_name}
                         >
-                          <Button className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90">
+                          <Button 
+                            onClick={() => handleDownload(doc)}
+                            className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                          >
                             <Download className="h-4 w-4" />
                             Télécharger
                           </Button>
