@@ -119,17 +119,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Cloudinary credentials
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': config('CLOUDINARY_API_KEY'),
-    'API_SECRET': config('CLOUDINARY_API_SECRET'),
-    'SECURE': True,
-    'TYPE': 'upload',
-    'SIGN_URL': True,
-    
-}
-
 # Détection de l'environnement
 IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
 
