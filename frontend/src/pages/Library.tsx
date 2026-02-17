@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { DocumentPreview } from "@/components/DocumentPreview";
-import { getDocuments, Document, downloadDocument } from "@/lib/api";
+import { getDocuments, Document } from "@/lib/api";
 
 const Library = () => {
   const navigate = useNavigate();
@@ -82,27 +82,6 @@ const Library = () => {
   if (loading) {
     return null;
   }
-
-
-  const handleDownload = async (doc: Document) => {
-  try {
-    const token = localStorage.getItem('access_token');
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/documents/${doc.id}/download/`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
-    );
-    
-    if (response.ok) {
-      const data = await response.json();
-      // Ouvrir l'URL signée dans un nouvel onglet
-      window.open(data.download_url, '_blank');
-    }
-  } catch (error) {
-    console.error('❌ Erreur téléchargement:', error);
-  }
-};
 
   return (
     <div className="min-h-screen bg-background">
@@ -208,13 +187,12 @@ const Library = () => {
                       </CardHeader>
                         <CardContent className="space-y-2">
                           <DocumentPreview fileUrl={doc.file_url} fileName={doc.file_name} />
-                          <Button 
-                            onClick={() => handleDownload(doc)}
-                            className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                          >
-                            <Download className="h-4 w-4" />
-                            Télécharger
-                          </Button>
+                          <a href={doc.file_url} download={doc.file_name} target="_blank" rel="noopener noreferrer">
+                            <Button className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90">
+                              <Download className="h-4 w-4" />
+                              Télécharger
+                            </Button>
+                          </a>
                         </CardContent>
                     </Card>
                   ))}
