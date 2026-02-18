@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'cloudinary_storage',
+    'cloudinary',
     'api',
 ]
 
@@ -106,29 +108,18 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# SUPABASE STORAGE CONFIGURATION
+# CLOUDINARY CONFIGURATION
 IS_PRODUCTION = config('DATABASE_URL', default=None) is not None
 
 if IS_PRODUCTION:
-    # Supabase Storage
-    SUPABASE_URL = config('SUPABASE_URL', default='')
-    SUPABASE_KEY = config('SUPABASE_KEY', default='')
-    SUPABASE_BUCKET = config('SUPABASE_BUCKET', default='documents')
-    
-    print("🔍 DEBUG Supabase:")
-    print(f"  SUPABASE_URL: {SUPABASE_URL[:30]}..." if SUPABASE_URL else "  SUPABASE_URL: VIDE ❌")
-    print(f"  SUPABASE_KEY: {SUPABASE_KEY[:20]}..." if SUPABASE_KEY else "  SUPABASE_KEY: VIDE ❌")
-    print(f"  SUPABASE_BUCKET: {SUPABASE_BUCKET}")
-    
-    if SUPABASE_URL and SUPABASE_KEY:
-        DEFAULT_FILE_STORAGE = 'api.storage.SupabaseStorage'
-        MEDIA_URL = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/'
-        print("  ✅ SupabaseStorage activé")
-    else:
-        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-        MEDIA_URL = '/media/'
-        MEDIA_ROOT = BASE_DIR / 'documents'
-        print("  ⚠️ Variables Supabase manquantes, fallback FileSystemStorage")
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': config('CLOUDINARY_API_KEY'),
+        'API_SECRET': config('CLOUDINARY_API_SECRET'),
+        'SECURE': True,
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = ''
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'

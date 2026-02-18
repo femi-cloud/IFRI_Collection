@@ -1,15 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
+from cloudinary_storage.storage import MediaCloudinaryStorage
 import uuid
-
-def get_file_storage():
-    from django.conf import settings
-    if settings.IS_PRODUCTION:
-        from api.storage import SupabaseStorage
-        return SupabaseStorage()
-    from django.core.files.storage import FileSystemStorage
-    return FileSystemStorage()
 
 # Custom User Model
 class User(AbstractUser):
@@ -58,7 +51,7 @@ class Document(models.Model):
     description = models.TextField(blank=True, null=True)
     semester = models.IntegerField(choices=SEMESTER_CHOICES)
     document_type = models.CharField(max_length=10, choices=DOCUMENT_TYPES)
-    file = models.FileField(upload_to='%Y/%m/', storage=get_file_storage)
+    file = models.FileField(upload_to='%Y/%m/',storage=MediaCloudinaryStorage())
     file_name = models.CharField(max_length=255)
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents')
     created_at = models.DateTimeField(auto_now_add=True)
