@@ -190,7 +190,7 @@ const Library = () => {
                           <a href={doc.file_url} download={doc.file_name} target="_blank" rel="noopener noreferrer">
                             <Button className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90">
                               <Download className="h-4 w-4" />
-                              Voir le document
+                              Télécharger
                             </Button>
                           </a>
                         </CardContent>
